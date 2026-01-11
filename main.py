@@ -11,7 +11,6 @@ MAX_FALL_SPEED = -1200
 CUT_JUMP_FACTOR = 0.7
 
 
-
 class FaceDirection(enum.Enum):
     LEFT = 0
     RIGHT = 1
