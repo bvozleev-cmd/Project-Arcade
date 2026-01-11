@@ -39,8 +39,6 @@ class Player(arcade.Sprite):
 
     def update(self, keys_pressed, delta_time: float = 1 / 60):
         dx = 0
-
-        # Горизонталь
         if arcade.key.LEFT in keys_pressed or arcade.key.A in keys_pressed:
             dx -= PLAYER_SPEED * delta_time
         if arcade.key.RIGHT in keys_pressed or arcade.key.D in keys_pressed:
