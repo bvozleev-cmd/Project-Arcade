@@ -1,13 +1,14 @@
 import arcade
 import enum
 
-
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 600
 SCREEN_TITLE = "Coin Quest"
 PLAYER_SPEED = 300
-PLAYER_JUMP_SPEED = 10000
-GRAVITY = 5
+GRAVITY = 2500
+JUMP_FORCE = 900
+MAX_FALL_SPEED = -1200
+CUT_JUMP_FACTOR = 0.7
 
 
 class FaceDirection(enum.Enum):
@@ -20,55 +21,49 @@ class Player(arcade.Sprite):
         super().__init__()
         self.scale = 0.2
         self.idle_texture = arcade.load_texture(
-            "images/characters/character_1.png")
+            "images/characters/character_1.png"
+        )
         self.texture = self.idle_texture
         self.center_x = SCREEN_WIDTH // 2
-        self.center_y = SCREEN_HEIGHT // 2
+        self.center_y = 45
         self.face_direction = FaceDirection.RIGHT
-        self.jump_able = True
+        self.velocity_y = 0.0
+        self.on_ground = True
+        self.jump_pressed = False
 
-    def update_animation(self, delta_time: float = 1/60):
+    def update_animation(self, delta_time: float = 1 / 60):
         if self.face_direction == FaceDirection.RIGHT:
             self.texture = self.idle_texture
         else:
             self.texture = self.idle_texture.flip_horizontally()
 
     def update(self, keys_pressed, delta_time: float = 1 / 60):
-        dx, dy = 0, 0
-        dy -= GRAVITY
+        dx = 0
+
+        # Горизонталь
         if arcade.key.LEFT in keys_pressed or arcade.key.A in keys_pressed:
             dx -= PLAYER_SPEED * delta_time
         if arcade.key.RIGHT in keys_pressed or arcade.key.D in keys_pressed:
             dx += PLAYER_SPEED * delta_time
         if arcade.key.SPACE in keys_pressed:
-            if self.jump_able and self.center_y <= self.height / 2:
-                dy += PLAYER_JUMP_SPEED * delta_time
-                self.jump_able = False
+            if self.on_ground and not self.jump_pressed:
+                self.velocity_y = JUMP_FORCE
+                self.on_ground = False
+                self.jump_pressed = True
         else:
-            self.jump_able = True
-
-        if dx != 0 and dy != 0:
-            factor = 0.7071
-            dx *= factor
-            dy *= factor
-
+            if self.velocity_y > 0:
+                self.velocity_y *= CUT_JUMP_FACTOR
+            self.jump_pressed = False
+        self.velocity_y -= GRAVITY * delta_time
+        if self.velocity_y < MAX_FALL_SPEED:
+            self.velocity_y = MAX_FALL_SPEED
         self.center_x += dx
-        self.center_y += dy
-
-        # Ограничение в пределах экрана
-        top = self.center_y + self.height // 4
-        bottom = self.center_y - self.height // 4
-        left = self.center_x - self.width // 8
-        right = self.center_x + self.width // 8
-        if top > SCREEN_HEIGHT:
-            self.center_y = SCREEN_HEIGHT - 45
-        elif bottom <= 0:
+        self.center_y += self.velocity_y * delta_time
+        if self.center_y <= 45:
             self.center_y = 45
-        if right > SCREEN_WIDTH:
-            self.center_x = SCREEN_WIDTH - 40
-        elif left < 0:
-            self.center_x = 40
-
+            self.velocity_y = 0
+            self.on_ground = True
+        self.center_x = max(40, min(SCREEN_WIDTH - 40, self.center_x))
         if dx < 0:
             self.face_direction = FaceDirection.LEFT
         elif dx > 0:
