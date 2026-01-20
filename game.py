@@ -11,7 +11,7 @@ PLAYER_JUMP_SPEED = 25
 GRAVITY = 1.2
 TILE_SCALING = 0.5
 PLAYER_SCALE = 0.2
-MAP_PATH = "maps/map_1.tmx"
+MAP_PATH = "maps/map_2.tmx"
 
 
 class FaceDirection(enum.Enum):
@@ -58,20 +58,26 @@ class MyGame(arcade.View):
         arcade.set_background_color(arcade.color.AZURE)
         self.setup()
 
-
     def setup(self):
         self.items_collected = 0
         tile_map = arcade.load_tilemap(
             MAP_PATH,
             scaling=TILE_SCALING,
             layer_options={
-                "Platforms": {"use_spatial_hash": True},
-                "Items": {"use_spatial_hash": True},
+                "Wall": {"use_spatial_hash": True},  # коллизии
+                "Platforms": {"use_spatial_hash": True},  # видимые платформы
+                "Items": {"use_spatial_hash": True},  # предметы
             }
         )
+        self.tile_map = tile_map
         self.scene = arcade.Scene()
+
+        # Добавляем все слои, кроме Wall в сцену для отрисовки
         for layer_name, layer in tile_map.sprite_lists.items():
-            self.scene.add_sprite_list(layer_name, sprite_list=layer)
+            if layer_name != "Wall":  # Wall не будет рисоваться
+                self.scene.add_sprite_list(layer_name, sprite_list=layer)
+
+        # Игрок
         self.player = Player()
         player_layer = tile_map.object_lists.get("Player")
         if player_layer:
@@ -81,15 +87,20 @@ class MyGame(arcade.View):
         else:
             self.player.center_x = self.player.width // 2
             self.player.center_y = self.player.height // 2
+
         self.scene.add_sprite("Player", self.player)
-        try:
-            self.camera = arcade.camera.Camera2D()
-        except:
-            self.camera = None
+
+        # Камера
+        self.camera = arcade.Camera2D()
+
+        walls_for_physics = arcade.SpriteList()
+        walls_for_physics.extend(tile_map.sprite_lists["Wall"])
+        walls_for_physics.extend(tile_map.sprite_lists["Platforms"])
+
         self.physics_engine = arcade.PhysicsEnginePlatformer(
             self.player,
             gravity_constant=GRAVITY,
-            walls=self.scene["Platforms"]
+            walls=walls_for_physics
         )
 
     def on_draw(self):
