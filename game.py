@@ -55,6 +55,7 @@ class MyGame(arcade.View):
         self.player = None
         self.physics_engine = None
         self.camera = None
+        self.gui_camera = None
 
     def on_show_view(self):
         arcade.set_background_color(arcade.color.AZURE)
@@ -94,6 +95,7 @@ class MyGame(arcade.View):
 
         # Камера
         self.camera = arcade.Camera2D()
+        self.gui_camera = arcade.Camera2D()
 
         walls_for_physics = arcade.SpriteList()
         walls_for_physics.extend(tile_map.sprite_lists["Wall"])
@@ -110,8 +112,10 @@ class MyGame(arcade.View):
         if self.camera:
             self.camera.use()
         self.scene.draw()
+        if self.gui_camera:
+            self.gui_camera.use()
         arcade.draw_text(
-            f"Items: {self.items_collected}",
+            f"Кристаллов собрано: {self.items_collected}",
             x=20,
             y=self.window.height - 40,
             color=arcade.color.YELLOW,
