@@ -31,6 +31,8 @@ class Player(arcade.Sprite):
                 30, arcade.color.RED)
         self.texture = self.idle_texture
         self.face_direction = FaceDirection.RIGHT
+        self.idle_texture_right = self.idle_texture
+        self.idle_texture_left = self.idle_texture.flip_horizontally()
 
     def update_animation(self, delta_time: float = 1 / 60):
         if self.change_x < 0 and self.face_direction == FaceDirection.RIGHT:
@@ -39,9 +41,9 @@ class Player(arcade.Sprite):
             self.face_direction = FaceDirection.RIGHT
 
         if self.face_direction == FaceDirection.LEFT:
-            self.texture = self.idle_texture.flip_horizontally()
+            self.texture = self.idle_texture_left
         else:
-            self.texture = self.idle_texture
+            self.texture = self.idle_texture_right
 
 
 class MyGame(arcade.View):
@@ -130,8 +132,8 @@ class MyGame(arcade.View):
             self.player.update_animation()
             if self.camera:
                 self.camera.position = (
-                    self.player.center_x,
-                    SCREEN_HEIGHT // 2
+                    int(self.player.center_x),
+                    self.window.height // 2
                 )
             if self.player.center_y < -300:
                 self.setup()
