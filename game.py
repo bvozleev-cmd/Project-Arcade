@@ -47,14 +47,19 @@ class Player(arcade.Sprite):
 
 
 class MyGame(arcade.View):
-    def __init__(self):
+    def __init__(self, level=1):
         super().__init__()
+        self.level = level
         self.left_pressed = False
         self.right_pressed = False
         self.scene = None
         self.player = None
         self.physics_engine = None
         self.camera = None
+        self.gui_camera = None
+        self.god_mode = False
+        self.up_pressed = False
+        self.down_pressed = False
 
     def on_show_view(self):
         arcade.set_background_color(arcade.color.AZURE)
@@ -62,13 +67,20 @@ class MyGame(arcade.View):
 
     def setup(self):
         self.items_collected = 0
+        map_name = f"maps/map_{self.level}.tmx"
+        # If map doesn't exist, fallback to map_2.tmx or handle error
+        if not os.path.exists(map_name):
+            print(f"Warning: Map {map_name} not found, defaulting to maps/map_2.tmx")
+            map_name = "maps/map_2.tmx"
+
         tile_map = arcade.load_tilemap(
-            MAP_PATH,
+            map_name,
             scaling=TILE_SCALING,
             layer_options={
                 "Wall": {"use_spatial_hash": True},  # коллизии
                 "Platforms": {"use_spatial_hash": True},  # видимые платформы
                 "Items": {"use_spatial_hash": True},  # предметы
+                "Door": {"use_spatial_hash": True},  # дверь выхода
             }
         )
         self.tile_map = tile_map
@@ -94,6 +106,7 @@ class MyGame(arcade.View):
 
         # Камера
         self.camera = arcade.Camera2D()
+        self.gui_camera = arcade.Camera2D()
 
         walls_for_physics = arcade.SpriteList()
         walls_for_physics.extend(tile_map.sprite_lists["Wall"])
@@ -110,14 +123,26 @@ class MyGame(arcade.View):
         if self.camera:
             self.camera.use()
         self.scene.draw()
+        if self.gui_camera:
+            self.gui_camera.use()
         arcade.draw_text(
-            f"Items: {self.items_collected}",
+            f"Кристаллов собрано: {self.items_collected}",
             x=20,
             y=self.window.height - 40,
             color=arcade.color.YELLOW,
             font_size=24,
             bold=True
         )
+
+        if self.god_mode:
+            arcade.draw_text(
+                "GOD MODE",
+                x=20,
+                y=self.window.height - 80,
+                color=arcade.color.RED,
+                font_size=20,
+                bold=True
+            )
 
     def on_update(self, delta_time):
         if self.left_pressed and not self.right_pressed:
@@ -126,8 +151,26 @@ class MyGame(arcade.View):
             self.player.change_x = PLAYER_MOVEMENT_SPEED
         else:
             self.player.change_x = 0
-        if self.physics_engine:
-            self.physics_engine.update()
+
+        if self.god_mode:
+            if self.up_pressed and not self.down_pressed:
+                self.player.change_y = PLAYER_MOVEMENT_SPEED
+            elif self.down_pressed and not self.up_pressed:
+                self.player.change_y = -PLAYER_MOVEMENT_SPEED
+            else:
+                self.player.change_y = 0
+            
+            self.player.center_x += self.player.change_x
+            self.player.center_y += self.player.change_y
+        else:
+            if self.physics_engine:
+                self.physics_engine.update()
+            if self.player.center_y < -300:
+                from death_view import DeathView
+                from database import update_crystals
+                update_crystals(self.level, self.items_collected)
+                self.window.show_view(DeathView(self.level))
+
         if self.player:
             self.player.update_animation()
             if self.camera:
@@ -135,8 +178,6 @@ class MyGame(arcade.View):
                     int(self.player.center_x),
                     self.window.height // 2
                 )
-            if self.player.center_y < -300:
-                self.setup()
         items_hit = arcade.check_for_collision_with_list(
             self.player,
             self.scene["Items"]
@@ -145,14 +186,33 @@ class MyGame(arcade.View):
             item.remove_from_sprite_lists()
             self.items_collected += 1
 
+        # Check for door collision (victory)
+        if "Door" in self.scene:
+            if arcade.check_for_collision_with_list(self.player, self.scene["Door"]):
+                from database import complete_level
+                from win_view import WinView
+                
+                # Save progress
+                complete_level(self.level, self.items_collected)
+                
+                # Show victory screen
+                self.window.show_view(WinView(self.level, self.items_collected))
+
     def on_key_press(self, key, modifiers):
         if key in (arcade.key.LEFT, arcade.key.A):
             self.left_pressed = True
         elif key in (arcade.key.RIGHT, arcade.key.D):
             self.right_pressed = True
         elif key in (arcade.key.UP, arcade.key.W, arcade.key.SPACE):
-            if self.physics_engine and self.physics_engine.can_jump():
+            if self.god_mode:
+                self.up_pressed = True
+            elif self.physics_engine and self.physics_engine.can_jump():
                 self.player.change_y = PLAYER_JUMP_SPEED
+        elif key in (arcade.key.DOWN, arcade.key.S):
+            if self.god_mode:
+                self.down_pressed = True
+        elif key == arcade.key.G:
+            self.god_mode = not self.god_mode
         elif key == arcade.key.ESCAPE:
             arcade.close_window()
 
@@ -161,6 +221,10 @@ class MyGame(arcade.View):
             self.left_pressed = False
         elif key in (arcade.key.RIGHT, arcade.key.D):
             self.right_pressed = False
+        elif key in (arcade.key.UP, arcade.key.W, arcade.key.SPACE):
+            self.up_pressed = False
+        elif key in (arcade.key.DOWN, arcade.key.S):
+            self.down_pressed = False
 
 
 def main():
