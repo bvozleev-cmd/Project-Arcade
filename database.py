@@ -51,3 +51,14 @@ def complete_level(level_id, crystals):
         WHERE id = ?
         """, (crystals, level_id))
         conn.commit()
+
+
+def update_crystals(level_id, crystals):
+    with get_connection() as conn:
+        c = conn.cursor()
+        c.execute("""
+        UPDATE levels
+        SET crystals = MAX(crystals, ?)
+        WHERE id = ?
+        """, (crystals, level_id))
+        conn.commit()

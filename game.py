@@ -47,8 +47,9 @@ class Player(arcade.Sprite):
 
 
 class MyGame(arcade.View):
-    def __init__(self):
+    def __init__(self, level=1):
         super().__init__()
+        self.level = level
         self.left_pressed = False
         self.right_pressed = False
         self.scene = None
@@ -66,8 +67,14 @@ class MyGame(arcade.View):
 
     def setup(self):
         self.items_collected = 0
+        map_name = f"maps/map_{self.level}.tmx"
+        # If map doesn't exist, fallback to map_2.tmx or handle error
+        if not os.path.exists(map_name):
+            print(f"Warning: Map {map_name} not found, defaulting to maps/map_2.tmx")
+            map_name = "maps/map_2.tmx"
+
         tile_map = arcade.load_tilemap(
-            MAP_PATH,
+            map_name,
             scaling=TILE_SCALING,
             layer_options={
                 "Wall": {"use_spatial_hash": True},  # коллизии
@@ -158,7 +165,10 @@ class MyGame(arcade.View):
             if self.physics_engine:
                 self.physics_engine.update()
             if self.player.center_y < -300:
-                self.setup()
+                from death_view import DeathView
+                from database import update_crystals
+                update_crystals(self.level, self.items_collected)
+                self.window.show_view(DeathView(self.level))
 
         if self.player:
             self.player.update_animation()
