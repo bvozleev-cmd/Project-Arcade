@@ -80,6 +80,7 @@ class MyGame(arcade.View):
                 "Wall": {"use_spatial_hash": True},  # коллизии
                 "Platforms": {"use_spatial_hash": True},  # видимые платформы
                 "Items": {"use_spatial_hash": True},  # предметы
+                "Door": {"use_spatial_hash": True},  # дверь выхода
             }
         )
         self.tile_map = tile_map
@@ -184,6 +185,18 @@ class MyGame(arcade.View):
         for item in items_hit:
             item.remove_from_sprite_lists()
             self.items_collected += 1
+
+        # Check for door collision (victory)
+        if "Door" in self.scene:
+            if arcade.check_for_collision_with_list(self.player, self.scene["Door"]):
+                from database import complete_level
+                from win_view import WinView
+                
+                # Save progress
+                complete_level(self.level, self.items_collected)
+                
+                # Show victory screen
+                self.window.show_view(WinView(self.level, self.items_collected))
 
     def on_key_press(self, key, modifiers):
         if key in (arcade.key.LEFT, arcade.key.A):
