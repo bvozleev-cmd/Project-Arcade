@@ -13,10 +13,10 @@ class DeathView(arcade.View):
 
         box = arcade.gui.UIBoxLayout(space_between=20)
 
-        restart = arcade.gui.UIFlatButton(text="Restart", width=300)
+        restart = arcade.gui.UIFlatButton(text="Начать сначала", width=300)
         restart.on_click = lambda e: self.window.show_view(MyGame(self.level_id))
 
-        menu = arcade.gui.UIFlatButton(text="Level Menu", width=300)
+        menu = arcade.gui.UIFlatButton(text="Меню уровней", width=300)
         menu.on_click = lambda e: self.window.show_view(LevelSelectView())
 
         box.add(restart)
@@ -29,7 +29,7 @@ class DeathView(arcade.View):
     def on_draw(self):
         self.clear()
         arcade.draw_text(
-            "YOU DIED",
+            "ВЫ ПРОИГРАЛИ",
             self.window.width / 2,
             self.window.height * 0.7,
             arcade.color.RED,

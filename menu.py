@@ -9,16 +9,16 @@ class MenuView(arcade.View):
         self.manager = arcade.gui.UIManager()
         self.manager.enable()
         self.v_box = arcade.gui.UIBoxLayout(space_between=20)
-        start_button = arcade.gui.UIFlatButton(text="Start Game", width=250)
+        start_button = arcade.gui.UIFlatButton(text="Начать игру", width=250)
         start_button.on_click = self.on_click_start
         self.v_box.add(start_button)
-        settings_button = arcade.gui.UIFlatButton(text="Settings", width=250)
+        settings_button = arcade.gui.UIFlatButton(text="Настройки", width=250)
         settings_button.on_click = self.on_click_settings
         self.v_box.add(settings_button)
-        shop_button = arcade.gui.UIFlatButton(text="Shop", width=250)
+        shop_button = arcade.gui.UIFlatButton(text="Магазин", width=250)
         shop_button.on_click = self.on_click_shop
         self.v_box.add(shop_button)
-        quit_button = arcade.gui.UIFlatButton(text="Quit", width=250)
+        quit_button = arcade.gui.UIFlatButton(text="Выход", width=250)
         quit_button.on_click = self.on_click_quit
         self.v_box.add(quit_button)
         anchor_layout = arcade.gui.UIAnchorLayout()
@@ -33,10 +33,16 @@ class MenuView(arcade.View):
             anchor_x="center"
         )
 
+    def on_show_view(self):
+        arcade.set_background_color(arcade.color.AZURE)
+        self.manager.enable()
+
+    def on_hide_view(self):
+        self.manager.disable()
+
     def on_click_start(self, event):
-        game = MyGame()
-        game.setup()
-        self.window.show_view(game)
+        from level_select import LevelSelectView
+        self.window.show_view(LevelSelectView())
 
     def on_click_settings(self, event):
         print("Settings clicked")

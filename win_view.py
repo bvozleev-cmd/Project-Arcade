@@ -18,7 +18,7 @@ class WinView(arcade.View):
 
         # Title
         title = arcade.gui.UILabel(
-            text="LEVEL COMPLETED!",
+            text="УРОВЕНЬ ПРОЙДЕН!",
             font_size=30,
             text_color=arcade.color.GOLD,
             font_name=("Arial",)
@@ -27,19 +27,19 @@ class WinView(arcade.View):
 
         # Stats
         stats = arcade.gui.UILabel(
-            text=f"Crystals Collected: {self.crystals}",
+            text=f"Кристалов собрано: {self.crystals}",
             font_size=20,
             text_color=arcade.color.WHITE
         )
         box.add(stats)
 
         # Buttons
-        next_level_btn = arcade.gui.UIFlatButton(text="Next Level", width=200)
+        next_level_btn = arcade.gui.UIFlatButton(text="Следующий уровень", width=200)
         # For now, just go to level select, or logic for next level could be added
         next_level_btn.on_click = lambda e: self.window.show_view(LevelSelectView())
         box.add(next_level_btn)
 
-        menu_btn = arcade.gui.UIFlatButton(text="Main Menu", width=200)
+        menu_btn = arcade.gui.UIFlatButton(text="Главное меню", width=200)
         menu_btn.on_click = lambda e: self.window.show_view(MenuView())
         box.add(menu_btn)
 

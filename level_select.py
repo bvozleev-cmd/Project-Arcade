@@ -20,7 +20,7 @@ class LevelSelectView(arcade.View):
             btn.on_click = lambda e, lvl=level_id: self.start(lvl)
             box.add(btn)
 
-        back = arcade.gui.UIFlatButton(text="Back", width=200)
+        back = arcade.gui.UIFlatButton(text="Назад", width=200)
         back.on_click = lambda e: self.window.show_view(MenuView())
         box.add(back)
 
