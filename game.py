@@ -47,9 +47,10 @@ class Player(arcade.Sprite):
 
 
 class MyGame(arcade.View):
-    def __init__(self, level=1):
+    def __init__(self, level=1, level_select_view=None):
         super().__init__()
         self.level = level
+        self.level_select_view = level_select_view
         self.left_pressed = False
         self.right_pressed = False
         self.scene = None
@@ -60,10 +61,11 @@ class MyGame(arcade.View):
         self.god_mode = False
         self.up_pressed = False
         self.down_pressed = False
+        
+        self.setup()
 
     def on_show_view(self):
         arcade.set_background_color(arcade.color.AZURE)
-        self.setup()
 
     def setup(self):
         self.items_collected = 0
@@ -214,7 +216,8 @@ class MyGame(arcade.View):
         elif key == arcade.key.G:
             self.god_mode = not self.god_mode
         elif key == arcade.key.ESCAPE:
-            arcade.close_window()
+            from pause_view import PauseView
+            self.window.show_view(PauseView(self))
 
     def on_key_release(self, key, modifiers):
         if key in (arcade.key.LEFT, arcade.key.A):

@@ -42,7 +42,7 @@ class MenuView(arcade.View):
 
     def on_click_start(self, event):
         from level_select import LevelSelectView
-        self.window.show_view(LevelSelectView())
+        self.window.show_view(LevelSelectView(back_view=self))
 
     def on_click_settings(self, event):
         print("Settings clicked")
