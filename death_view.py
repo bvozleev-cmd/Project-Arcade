@@ -29,10 +29,10 @@ class DeathView(arcade.View):
     def on_draw(self):
         self.clear()
         arcade.draw_text(
-            "ВЫ ПРОИГРАЛИ",
+            "ВЫ ПРОИГРАЛИ!😿",
             self.window.width / 2,
             self.window.height * 0.7,
-            arcade.color.RED,
+            arcade.color.YELLOW,
             60,
             anchor_x="center"
         )

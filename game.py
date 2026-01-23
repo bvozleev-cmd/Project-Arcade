@@ -25,7 +25,7 @@ class Player(arcade.Sprite):
         self.scale = PLAYER_SCALE
         try:
             self.idle_texture = arcade.load_texture(
-                "images/characters/character_1.png")
+                "images/characters/character_2.png")
         except:
             self.idle_texture = arcade.make_circle_texture(
                 30, arcade.color.RED)
@@ -126,10 +126,9 @@ class MyGame(arcade.View):
         if self.gui_camera:
             self.gui_camera.use()
         arcade.draw_text(
-            f"Кристаллов собрано: {self.items_collected}",
+            f"💎: {self.items_collected}",
             x=20,
             y=self.window.height - 40,
-            color=arcade.color.YELLOW,
             font_size=24,
             bold=True
         )
@@ -167,8 +166,6 @@ class MyGame(arcade.View):
                 self.physics_engine.update()
             if self.player.center_y < -300:
                 from death_view import DeathView
-                from database import update_crystals
-                update_crystals(self.level, self.items_collected)
                 self.window.show_view(DeathView(self.level))
 
         if self.player:
@@ -189,14 +186,17 @@ class MyGame(arcade.View):
         # Check for door collision (victory)
         if "Door" in self.scene:
             if arcade.check_for_collision_with_list(self.player, self.scene["Door"]):
-                from database import complete_level
+                from database import complete_level, get_level_crystals
                 from win_view import WinView
-                
-                # Save progress
+
+                old_record = get_level_crystals(self.level)
+                new_record = self.items_collected > old_record
+
                 complete_level(self.level, self.items_collected)
-                
-                # Show victory screen
-                self.window.show_view(WinView(self.level, self.items_collected))
+
+                self.window.show_view(
+                    WinView(self.level, self.items_collected, new_record)
+                )
 
     def on_key_press(self, key, modifiers):
         if key in (arcade.key.LEFT, arcade.key.A):

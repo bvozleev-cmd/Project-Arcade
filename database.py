@@ -62,3 +62,14 @@ def update_crystals(level_id, crystals):
         WHERE id = ?
         """, (crystals, level_id))
         conn.commit()
+
+
+def get_level_crystals(level_id):
+    with get_connection() as conn:
+        c = conn.cursor()
+        c.execute(
+            "SELECT crystals FROM levels WHERE id=?",
+            (level_id,)
+        )
+        result = c.fetchone()
+        return result[0] if result else 0

@@ -14,8 +14,9 @@ class LevelSelectView(arcade.View):
         box = arcade.gui.UIBoxLayout(space_between=15)
 
         for level_id, completed, crystals in get_levels():
-            status = "✔" if completed else "✖"
-            text = f"Level {level_id} [{status}] 💎 {crystals}/10"
+            status = "✅" if completed else "❌"
+            crystal_text = f" 💎 {crystals}/10" if completed else ""
+            text = f"Уровень {level_id} {status}{crystal_text}"
             btn = arcade.gui.UIFlatButton(text=text, width=420)
             btn.on_click = lambda e, lvl=level_id: self.start(lvl)
             box.add(btn)
