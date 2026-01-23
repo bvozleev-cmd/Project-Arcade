@@ -2,7 +2,6 @@ import arcade
 import arcade.gui
 from game import MyGame
 
-
 class MenuView(arcade.View):
     def __init__(self):
         super().__init__()
@@ -16,7 +15,8 @@ class MenuView(arcade.View):
         settings_button.on_click = self.on_click_settings
         self.v_box.add(settings_button)
         shop_button = arcade.gui.UIFlatButton(text="Магазин", width=250)
-        shop_button.on_click = self.on_click_shop
+        from shop import ShopView
+        shop_button.on_click = lambda e: self.window.show_view(ShopView())
         self.v_box.add(shop_button)
         quit_button = arcade.gui.UIFlatButton(text="Выход", width=250)
         quit_button.on_click = self.on_click_quit

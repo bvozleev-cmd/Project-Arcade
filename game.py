@@ -21,14 +21,14 @@ class FaceDirection(enum.Enum):
 
 class Player(arcade.Sprite):
     def __init__(self):
+        from database import get_selected_skin
         super().__init__(hit_box_algorithm="Simple")
         self.scale = PLAYER_SCALE
+        selected_skin = get_selected_skin()
         try:
-            self.idle_texture = arcade.load_texture(
-                "images/characters/character_2.png")
+            self.idle_texture = arcade.load_texture(f"images/characters/{selected_skin}.png")
         except:
-            self.idle_texture = arcade.make_circle_texture(
-                30, arcade.color.RED)
+            self.idle_texture = arcade.make_circle_texture(30, arcade.color.RED)
         self.texture = self.idle_texture
         self.face_direction = FaceDirection.RIGHT
         self.idle_texture_right = self.idle_texture
