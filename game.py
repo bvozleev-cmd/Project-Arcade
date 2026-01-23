@@ -1,6 +1,8 @@
 import arcade
 import enum
 import os
+import random
+import math
 
 
 SCREEN_WIDTH = 800
@@ -44,6 +46,29 @@ class Player(arcade.Sprite):
             self.texture = self.idle_texture_left
         else:
             self.texture = self.idle_texture_right
+
+
+class Particle(arcade.Sprite):
+    def __init__(self, x, y, dx, dy, texture):
+        super().__init__()
+        self.texture = texture
+        self.center_x = x
+        self.center_y = y
+        self.change_x = dx
+        self.change_y = dy
+        self.alpha = 255
+        self.fade_rate = 5
+        self.scale = 1.0
+
+    def update(self, delta_time: float = 1/60):
+        self.center_x += self.change_x
+        self.center_y += self.change_y
+        new_alpha = self.alpha - self.fade_rate
+        if new_alpha <= 0:
+            self.alpha = 0
+            self.remove_from_sprite_lists()
+        else:
+            self.alpha = new_alpha
 
 
 class MyGame(arcade.View):
@@ -109,6 +134,8 @@ class MyGame(arcade.View):
         # Камера
         self.camera = arcade.Camera2D()
         self.gui_camera = arcade.Camera2D()
+        self.particles = arcade.SpriteList()
+        self.particle_texture = arcade.make_circle_texture(10, arcade.color.YELLOW)
 
         walls_for_physics = arcade.SpriteList()
         walls_for_physics.extend(tile_map.sprite_lists["Wall"])
@@ -124,7 +151,10 @@ class MyGame(arcade.View):
         self.clear()
         if self.camera:
             self.camera.use()
+        
         self.scene.draw()
+        self.particles.draw()
+
         if self.gui_camera:
             self.gui_camera.use()
         arcade.draw_text(
@@ -184,6 +214,20 @@ class MyGame(arcade.View):
         for item in items_hit:
             item.remove_from_sprite_lists()
             self.items_collected += 1
+            
+            # Simple particle effect
+            # Use cached texture
+            for _ in range(10):
+                angle = random.uniform(0, 360)
+                speed = random.uniform(3, 8)
+                dx = math.cos(math.radians(angle)) * speed
+                dy = math.sin(math.radians(angle)) * speed
+                
+                particle = Particle(item.center_x, item.center_y, dx, dy, self.particle_texture)
+                self.particles.append(particle)
+
+        # Update particles
+        self.particles.update()
 
         # Check for door collision (victory)
         if "Door" in self.scene:
