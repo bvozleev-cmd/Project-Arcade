@@ -92,6 +92,7 @@ def init_skins():
             (3, "character_3", 20),
             (4, "character_4", 30),
             (5, "character_5", 40),
+            (6, "character_6", 50),
         ]
         for s in skins:
             c.execute("INSERT OR IGNORE INTO skins (id, name, cost) VALUES (?, ?, ?)", s)

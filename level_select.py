@@ -1,6 +1,7 @@
 import arcade
 import arcade.gui
 from database import get_levels
+import sounds
 
 
 class LevelSelectView(arcade.View):
@@ -9,7 +10,7 @@ class LevelSelectView(arcade.View):
         self.back_view = back_view
         self.ui = arcade.gui.UIManager()
         self.ui.enable()
-
+        sounds.press_button_1.play()
         box = arcade.gui.UIBoxLayout(space_between=15)
 
         for level_id, completed, crystals in get_levels():
@@ -29,6 +30,7 @@ class LevelSelectView(arcade.View):
         self.ui.add(anchor)
 
     def on_click_back(self, event):
+        sounds.press_button_1.play()
         if self.back_view:
             self.window.show_view(self.back_view)
         else:

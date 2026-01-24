@@ -1,11 +1,13 @@
 import arcade
 import arcade.gui
+import sounds
 from level_select import LevelSelectView
 from menu import MenuView
 
 class WinView(arcade.View):
     def __init__(self, level_id, crystals, new_record=False):
         super().__init__()
+        sounds.win.play()
         self.level_id = level_id
         self.crystals = crystals
         self.new_record = new_record

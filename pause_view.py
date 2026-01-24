@@ -1,9 +1,11 @@
 import arcade
 import arcade.gui
+import sounds
 from menu import MenuView
 
 class PauseView(arcade.View):
     def __init__(self, game_view):
+        sounds.press_button_1.play()
         super().__init__()
         self.game_view = game_view
         self.ui = arcade.gui.UIManager()
@@ -55,9 +57,11 @@ class PauseView(arcade.View):
         self.ui.add(anchor)
 
     def on_click_continue(self, event):
+        sounds.press_button_1.play()
         self.window.show_view(self.game_view)
 
     def on_click_levels(self, event):
+        sounds.press_button_1.play()
         if self.game_view.level_select_view:
             self.game_view.level_select_view.back_view = self
             self.window.show_view(self.game_view.level_select_view)
@@ -66,9 +70,11 @@ class PauseView(arcade.View):
             self.window.show_view(LevelSelectView(back_view=self))
 
     def on_click_menu(self, event):
+        sounds.press_button_1.play()
         self.window.show_view(MenuView())
 
     def on_click_settings(self, event):
+        sounds.press_button_1.play()
         print("Settings clicked from pause menu")
 
     def on_click_quit(self, event):
@@ -76,8 +82,6 @@ class PauseView(arcade.View):
 
     def on_draw(self):
         self.clear()
-        # Draw the underlying game view to show context, but dimmed or just background
-        # It's often nicer to just draw a solid color or blur, but here we'll use a solid color for simplicity
         arcade.set_background_color(arcade.color.DARK_SLATE_GRAY)
         self.ui.draw()
 

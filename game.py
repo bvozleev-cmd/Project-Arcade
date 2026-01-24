@@ -3,6 +3,7 @@ import enum
 import os
 import random
 import math
+import sounds
 
 
 SCREEN_WIDTH = 800
@@ -74,6 +75,7 @@ class Particle(arcade.Sprite):
 class MyGame(arcade.View):
     def __init__(self, level=1, level_select_view=None):
         super().__init__()
+        sounds.press_button_2.play()
         self.level = level
         self.level_select_view = level_select_view
         self.left_pressed = False
@@ -214,6 +216,7 @@ class MyGame(arcade.View):
         for item in items_hit:
             item.remove_from_sprite_lists()
             self.items_collected += 1
+            sounds.cristall.play()
             
             # Simple particle effect
             # Use cached texture

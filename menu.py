@@ -1,10 +1,12 @@
 import arcade
 import arcade.gui
+import sounds
 from game import MyGame
 
 class MenuView(arcade.View):
     def __init__(self):
         super().__init__()
+        sounds.press_button_1.play()
         self.manager = arcade.gui.UIManager()
         self.manager.enable()
         self.v_box = arcade.gui.UIBoxLayout(space_between=20)
@@ -45,13 +47,16 @@ class MenuView(arcade.View):
         self.window.show_view(LevelSelectView(back_view=self))
 
     def on_click_settings(self, event):
+        sounds.press_button_1.play()
         print("Settings clicked")
 
     def on_click_shop(self, event):
+        sounds.press_button_1.play()
         print("Shop clicked")
 
     def on_click_quit(self, event):
-        arcade.exit()
+        sounds.press_button_1.play()
+
 
     def on_draw(self):
         self.clear()
