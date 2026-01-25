@@ -4,6 +4,7 @@ import sounds
 from level_select import LevelSelectView
 from menu import MenuView
 
+
 class WinView(arcade.View):
     def __init__(self, level_id, crystals, new_record=False):
         super().__init__()
@@ -45,7 +46,7 @@ class WinView(arcade.View):
         box.add(next_btn)
 
         menu_btn = arcade.gui.UIFlatButton(text="Главное меню", width=220)
-        menu_btn.on_click = lambda e: self.window.show_view(MenuView())
+        menu_btn.on_click = lambda e: self.window.show_view(MenuView(win=1))
         box.add(menu_btn)
 
         anchor = arcade.gui.UIAnchorLayout()

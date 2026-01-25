@@ -3,19 +3,18 @@ import arcade.gui
 import sounds
 from game import MyGame
 
+
 class MenuView(arcade.View):
-    def __init__(self):
+    def __init__(self, win=0):
         super().__init__()
-        sounds.press_button_1.play()
+        if win:
+            sounds.press_button_1.play()
         self.manager = arcade.gui.UIManager()
         self.manager.enable()
         self.v_box = arcade.gui.UIBoxLayout(space_between=20)
         start_button = arcade.gui.UIFlatButton(text="Начать игру", width=250)
         start_button.on_click = self.on_click_start
         self.v_box.add(start_button)
-        settings_button = arcade.gui.UIFlatButton(text="Настройки", width=250)
-        settings_button.on_click = self.on_click_settings
-        self.v_box.add(settings_button)
         shop_button = arcade.gui.UIFlatButton(text="Магазин", width=250)
         from shop import ShopView
         shop_button.on_click = lambda e: self.window.show_view(ShopView())
@@ -34,6 +33,10 @@ class MenuView(arcade.View):
             font_size=80,
             anchor_x="center"
         )
+
+    def exit_after_delay(self, delta_time):
+        arcade.unschedule(self.exit_after_delay)
+        self.window.close()
 
     def on_show_view(self):
         arcade.set_background_color(arcade.color.AZURE)
@@ -56,7 +59,7 @@ class MenuView(arcade.View):
 
     def on_click_quit(self, event):
         sounds.press_button_1.play()
-
+        arcade.schedule(self.exit_after_delay, 0.3)
 
     def on_draw(self):
         self.clear()

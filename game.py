@@ -247,6 +247,18 @@ class MyGame(arcade.View):
                     WinView(self.level, self.items_collected, new_record)
                 )
 
+        # Update particles
+        self.particles.update()
+
+        # Проверка столкновений с Water/Lava
+        if "Water/Lava" in self.scene:
+            if arcade.check_for_collision_with_list(self.player, self.scene["Water/Lava"]):
+                if not getattr(self, "water_lava_sound_played", False):
+                    sounds.water.play()
+                    self.water_lava_sound_played = True
+            else:
+                self.water_lava_sound_played = False
+
     def on_key_press(self, key, modifiers):
         if key in (arcade.key.LEFT, arcade.key.A):
             self.left_pressed = True
@@ -257,6 +269,7 @@ class MyGame(arcade.View):
                 self.up_pressed = True
             elif self.physics_engine and self.physics_engine.can_jump():
                 self.player.change_y = PLAYER_JUMP_SPEED
+                sounds.jump.play()
         elif key in (arcade.key.DOWN, arcade.key.S):
             if self.god_mode:
                 self.down_pressed = True
