@@ -13,10 +13,25 @@ class LevelSelectView(arcade.View):
         sounds.press_button_1.play()
         box = arcade.gui.UIBoxLayout(space_between=15)
 
+        from database import get_level_time
+
         for level_id, completed, crystals in get_levels():
             status = "✅" if completed else "❌"
             crystal_text = f" 💎 {crystals}/10" if completed else ""
-            text = f"Уровень {level_id} {status}{crystal_text}"
+
+            # Получаем рекорд времени для уровня
+            best_time = get_level_time(level_id)
+            if best_time is not None:
+                minutes = int(best_time // 60)
+                seconds = int(best_time % 60)
+                milliseconds = int((best_time - int(best_time)) * 1000)
+                time_text = f" ⏱ {minutes:02}:{seconds:02}.{milliseconds:03}"
+            else:
+                time_text = ""
+
+            # Формируем текст кнопки
+            text = f"Уровень {level_id} {status}{crystal_text}{time_text}"
+
             btn = arcade.gui.UIFlatButton(text=text, width=420)
             btn.on_click = lambda e, lvl=level_id: self.start(lvl)
             box.add(btn)

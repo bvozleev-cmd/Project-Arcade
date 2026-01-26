@@ -25,7 +25,7 @@ class ShopView(arcade.View):
     def setup_ui(self):
         self.ui.clear()
         self.skin_buttons.clear()
-        total_crystals = sum(get_level_crystals(i) for i in range(1, 6))
+        total_crystals = sum(get_level_crystals(i) for i in range(1, 5))
         skins = get_skins()
         self.selected_skin = get_selected_skin()
         root = arcade.gui.UIBoxLayout(vertical=True, space_between=15)
@@ -81,7 +81,7 @@ class ShopView(arcade.View):
         self.ui.add(anchor)
 
     def update_buttons(self):
-        total_crystals = sum(get_level_crystals(i) for i in range(1, 6))
+        total_crystals = sum(get_level_crystals(i) for i in range(1, 5))
         skins = get_skins()
         for idx, (name, btn) in enumerate(self.skin_buttons.items(), start=1):
             unlocked_status = next(s[3] for s in skins if s[1] == name)

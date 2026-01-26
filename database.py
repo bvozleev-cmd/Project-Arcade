@@ -10,6 +10,7 @@ def get_connection():
 def init_db():
     with get_connection() as conn:
         c = conn.cursor()
+        # создаем таблицу уровней
         c.execute("""
         CREATE TABLE IF NOT EXISTS levels (
             id INTEGER PRIMARY KEY,
@@ -17,11 +18,19 @@ def init_db():
             crystals INTEGER DEFAULT 0
         )
         """)
-        for i in range(1, 6):
+        # добавляем уровни
+        for i in range(1, 5):  # теперь 4 уровня
             c.execute(
                 "INSERT OR IGNORE INTO levels (id) VALUES (?)", (i,)
             )
         conn.commit()
+
+        # Проверяем, есть ли колонка best_time, если нет — добавляем
+        c.execute("PRAGMA table_info(levels)")
+        columns = [col[1] for col in c.fetchall()]
+        if "best_time" not in columns:
+            c.execute("ALTER TABLE levels ADD COLUMN best_time REAL")
+            conn.commit()
 
 
 def get_levels():
@@ -92,7 +101,6 @@ def init_skins():
             (3, "character_3", 20),
             (4, "character_4", 30),
             (5, "character_5", 40),
-            (6, "character_6", 50),
         ]
         for s in skins:
             c.execute("INSERT OR IGNORE INTO skins (id, name, cost) VALUES (?, ?, ?)", s)
@@ -126,4 +134,17 @@ def select_skin(skin_name):
     with get_connection() as conn:
         c = conn.cursor()
         c.execute("UPDATE player_skin SET selected_skin=?", (skin_name,))
+        conn.commit()
+
+def get_level_time(level_id):
+    with get_connection() as conn:
+        c = conn.cursor()
+        c.execute("SELECT best_time FROM levels WHERE id=?", (level_id,))
+        result = c.fetchone()
+        return result[0] if result else None
+
+def update_level_time(level_id, time_seconds):
+    with get_connection() as conn:
+        c = conn.cursor()
+        c.execute("UPDATE levels SET best_time = ? WHERE id=?", (time_seconds, level_id))
         conn.commit()

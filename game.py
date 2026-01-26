@@ -4,7 +4,7 @@ import os
 import random
 import math
 import sounds
-
+import time
 
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 600
@@ -28,6 +28,10 @@ class Player(arcade.Sprite):
         super().__init__(hit_box_algorithm="Simple")
         self.scale = PLAYER_SCALE
         selected_skin = get_selected_skin()
+        if selected_skin == 'character_4':
+            self.scale = 0.17
+        elif selected_skin == 'character_5':
+            self.scale = 0.17
         try:
             self.idle_texture = arcade.load_texture(f"images/characters/{selected_skin}.png")
         except:
@@ -88,39 +92,36 @@ class MyGame(arcade.View):
         self.god_mode = False
         self.up_pressed = False
         self.down_pressed = False
-        
+        self.level_start_time = None
+        self.level_elapsed_time = 0.0
         self.setup()
 
     def on_show_view(self):
         arcade.set_background_color(arcade.color.AZURE)
 
     def setup(self):
+        import time
+        self.level_start_time = time.time()
         self.items_collected = 0
         map_name = f"maps/map_{self.level}.tmx"
-        # If map doesn't exist, fallback to map_2.tmx or handle error
         if not os.path.exists(map_name):
             print(f"Warning: Map {map_name} not found, defaulting to maps/map_2.tmx")
             map_name = "maps/map_2.tmx"
-
         tile_map = arcade.load_tilemap(
             map_name,
             scaling=TILE_SCALING,
             layer_options={
-                "Wall": {"use_spatial_hash": True},  # коллизии
-                "Platforms": {"use_spatial_hash": True},  # видимые платформы
-                "Items": {"use_spatial_hash": True},  # предметы
-                "Door": {"use_spatial_hash": True},  # дверь выхода
+                "Wall": {"use_spatial_hash": True},
+                "Platforms": {"use_spatial_hash": True},
+                "Items": {"use_spatial_hash": True},
+                "Door": {"use_spatial_hash": True},
             }
         )
         self.tile_map = tile_map
         self.scene = arcade.Scene()
-
-        # Добавляем все слои, кроме Wall в сцену для отрисовки
         for layer_name, layer in tile_map.sprite_lists.items():
             if layer_name != "Wall":  # Wall не будет рисоваться
                 self.scene.add_sprite_list(layer_name, sprite_list=layer)
-
-        # Игрок
         self.player = Player()
         player_layer = tile_map.object_lists.get("Player")
         if player_layer:
@@ -132,17 +133,13 @@ class MyGame(arcade.View):
             self.player.center_y = self.player.height // 2
 
         self.scene.add_sprite("Player", self.player)
-
-        # Камера
         self.camera = arcade.Camera2D()
         self.gui_camera = arcade.Camera2D()
         self.particles = arcade.SpriteList()
         self.particle_texture = arcade.make_circle_texture(10, arcade.color.YELLOW)
-
         walls_for_physics = arcade.SpriteList()
         walls_for_physics.extend(tile_map.sprite_lists["Wall"])
         walls_for_physics.extend(tile_map.sprite_lists["Platforms"])
-
         self.physics_engine = arcade.PhysicsEnginePlatformer(
             self.player,
             gravity_constant=GRAVITY,
@@ -167,17 +164,30 @@ class MyGame(arcade.View):
             bold=True
         )
 
+        minutes = int(self.level_elapsed_time // 60)
+        seconds = int(self.level_elapsed_time % 60)
+        milliseconds = int((self.level_elapsed_time - int(self.level_elapsed_time)) * 1000)
+        arcade.draw_text(
+            f"⏱ {minutes:02}:{seconds:02}.{milliseconds:03}",
+            x=20,
+            y=self.window.height - 75,
+            font_size=20,
+            bold=True,
+        )
+
         if self.god_mode:
             arcade.draw_text(
                 "GOD MODE",
                 x=20,
-                y=self.window.height - 80,
+                y=self.window.height - 105,
                 color=arcade.color.RED,
                 font_size=20,
                 bold=True
             )
 
     def on_update(self, delta_time):
+        if self.level_start_time:
+            self.level_elapsed_time = time.time() - self.level_start_time
         if self.left_pressed and not self.right_pressed:
             self.player.change_x = -PLAYER_MOVEMENT_SPEED
         elif self.right_pressed and not self.left_pressed:
@@ -241,11 +251,29 @@ class MyGame(arcade.View):
                 old_record = get_level_crystals(self.level)
                 new_record = self.items_collected > old_record
 
+                from database import complete_level, get_level_crystals, update_level_time
+                from win_view import WinView
+
+                old_record = get_level_crystals(self.level)
+                new_record_crystals = self.items_collected > old_record
                 complete_level(self.level, self.items_collected)
 
+                # --- время ---
+                from database import get_level_time
+                old_time = get_level_time(self.level)  # нужно сделать функцию
+                new_time = self.level_elapsed_time
+                new_record_time = False
+
+                if old_time is None or new_time < old_time:
+                    update_level_time(self.level, new_time)
+                    new_record_time = True
+
                 self.window.show_view(
-                    WinView(self.level, self.items_collected, new_record)
+                    WinView(self.level, self.items_collected, new_record_crystals, new_record_time, new_time)
                 )
+
+                complete_level(self.level, self.items_collected)
+
 
         # Update particles
         self.particles.update()
