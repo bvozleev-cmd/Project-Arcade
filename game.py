@@ -26,31 +26,84 @@ class Player(arcade.Sprite):
     def __init__(self):
         from database import get_selected_skin
         super().__init__(hit_box_algorithm="Simple")
-        self.scale = PLAYER_SCALE
+        
+        # Настройки анимации
+        self.cur_texture_index = 0
+        self.time_since_last_swap = 0.0
+        self.animation_speed = 0.15  # Скорость смены кадров
+
+        # Получаем скин
         selected_skin = get_selected_skin()
-        if selected_skin == 'character_4':
+        
+        # Настройка масштаба
+        self.scale = PLAYER_SCALE
+        if selected_skin == 'character_4' or selected_skin == 'character_5':
             self.scale = 0.17
-        elif selected_skin == 'character_5':
-            self.scale = 0.17
-        try:
-            self.idle_texture = arcade.load_texture(f"images/characters/{selected_skin}.png")
-        except:
-            self.idle_texture = arcade.make_circle_texture(30, arcade.color.RED)
-        self.texture = self.idle_texture
+
+        # --- Загрузка текстур ---
+        self.idle_texture_pair = self.load_texture_pair(f"images/characters/{selected_skin}.png")
+        self.jump_texture_pair = self.load_texture_pair(f"images/characters/{selected_skin}_jump.png")
+        self.walk_textures = []
+        
+        # Пытаемся загрузить кадры ходьбы (walk1, walk2)
+        # Если их нет, используем основную текстуру
+        for i in range(1, 3):
+            texture_pair = self.load_texture_pair(f"images/characters/{selected_skin}_walk{i}.png")
+            self.walk_textures.append(texture_pair)
+
+        # Начальная текстура
+        self.texture = self.idle_texture_pair[0]
         self.face_direction = FaceDirection.RIGHT
-        self.idle_texture_right = self.idle_texture
-        self.idle_texture_left = self.idle_texture.flip_horizontally()
+
+    def load_texture_pair(self, filename):
+        """
+        Загружает текстуру и создает зеркальную копию для левой стороны.
+        Возвращает пару [текстура_право, текстура_лево].
+        Если файл не найден, возвращает пару из текущей idle текстуры (или круга, если и ее нет).
+        """
+        try:
+            texture = arcade.load_texture(filename)
+            return [texture, texture.flip_horizontally()]
+        except:
+            # Если спец. кадра нет, берем основной, если есть
+            if hasattr(self, 'idle_texture_pair'):
+                return self.idle_texture_pair
+            # Если совсем ничего нет (fallback)
+            fallback = arcade.make_circle_texture(30, arcade.color.RED)
+            return [fallback, fallback]
 
     def update_animation(self, delta_time: float = 1 / 60):
+        # 1. Определяем направление (0 = лево, 1 = право)
         if self.change_x < 0 and self.face_direction == FaceDirection.RIGHT:
             self.face_direction = FaceDirection.LEFT
         elif self.change_x > 0 and self.face_direction == FaceDirection.LEFT:
             self.face_direction = FaceDirection.RIGHT
 
-        if self.face_direction == FaceDirection.LEFT:
-            self.texture = self.idle_texture_left
+        direction_idx = self.face_direction.value
+        # В arcade.flip_horizontally() обычно оригинал смотрит вправо.
+        # В load_texture_pair: pair[0] - оригинал (право), pair[1] - зеркало (лево)
+        # FaceDirection.RIGHT = 1, LEFT = 0.
+        # Приводим к индексу списка: 0 - право, 1 - лево.
+        tex_idx = 0 if self.face_direction == FaceDirection.RIGHT else 1
+
+        # 2. Логика прыжка
+        if self.change_y != 0:
+            self.texture = self.jump_texture_pair[tex_idx]
+            return
+
+        # 3. Логика ходьбы
+        if abs(self.change_x) > 0.1: # Если двигаемся
+            self.time_since_last_swap += delta_time
+            if self.time_since_last_swap > self.animation_speed:
+                self.cur_texture_index += 1
+                if self.cur_texture_index >= len(self.walk_textures):
+                    self.cur_texture_index = 0
+                self.time_since_last_swap = 0.0
+            
+            self.texture = self.walk_textures[self.cur_texture_index][tex_idx]
         else:
-            self.texture = self.idle_texture_right
+            # 4. Стоим на месте
+            self.texture = self.idle_texture_pair[tex_idx]
 
 
 class Particle(arcade.Sprite):
