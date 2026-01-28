@@ -3,15 +3,17 @@ import os
 import sys
 
 
-def get_base_path():
-    if getattr(sys, 'frozen', False):
-        base_path = sys._MEIPASS
+def get_save_dir():
+    if sys.platform == "win32":
+        base = os.environ.get("APPDATA")
     else:
-        base_path = os.path.dirname(os.path.abspath(__file__))
-    return os.path.join(base_path)
+        base = os.path.expanduser("~")
+    save_dir = os.path.join(base, "CoinQuest")
+    os.makedirs(save_dir, exist_ok=True)
+    return save_dir
 
 
-DB_NAME = os.path.join(get_base_path(), "progress.db")
+DB_NAME = os.path.join(get_save_dir(), "progress.db")
 
 
 def get_connection():
