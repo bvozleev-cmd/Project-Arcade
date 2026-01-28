@@ -1,9 +1,8 @@
 import arcade
 import arcade.gui
-from game import MyGame
-from level_select import LevelSelectView
-import sounds
 
+from resourses.code.level_select import LevelSelectView
+from . import sounds
 
 class DeathView(arcade.View):
     def __init__(self, level_id):
@@ -15,7 +14,12 @@ class DeathView(arcade.View):
         box = arcade.gui.UIBoxLayout(space_between=20)
 
         restart = arcade.gui.UIFlatButton(text="Начать сначала", width=300)
-        restart.on_click = lambda e: self.window.show_view(MyGame(self.level_id))
+
+        def restart_game(event):
+            from resourses.code.game import MyGame
+            self.window.show_view(MyGame(self.level_id))
+
+        restart.on_click = restart_game
 
         menu = arcade.gui.UIFlatButton(text="Меню уровней", width=300)
         menu.on_click = lambda e: self.window.show_view(LevelSelectView())

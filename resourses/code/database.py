@@ -1,6 +1,17 @@
 import sqlite3
+import os
+import sys
 
-DB_NAME = "progress.db"
+
+def get_base_path():
+    if getattr(sys, 'frozen', False):
+        base_path = sys._MEIPASS
+    else:
+        base_path = os.path.dirname(os.path.abspath(__file__))
+    return os.path.join(base_path)
+
+
+DB_NAME = os.path.join(get_base_path(), "progress.db")
 
 
 def get_connection():
@@ -19,7 +30,7 @@ def init_db():
         )
         """)
         # добавляем уровни
-        for i in range(1, 5):  # теперь 4 уровня
+        for i in range(1, 4):  # теперь 4 уровня
             c.execute(
                 "INSERT OR IGNORE INTO levels (id) VALUES (?)", (i,)
             )
@@ -100,7 +111,6 @@ def init_skins():
             (2, "character_2", 10),
             (3, "character_3", 20),
             (4, "character_4", 30),
-            (5, "character_5", 40),
         ]
         for s in skins:
             c.execute("INSERT OR IGNORE INTO skins (id, name, cost) VALUES (?, ?, ?)", s)
@@ -112,11 +122,13 @@ def init_skins():
         c.execute("INSERT OR IGNORE INTO player_skin (selected_skin) VALUES ('character_1')")
         conn.commit()
 
+
 def get_skins():
     with get_connection() as conn:
         c = conn.cursor()
         c.execute("SELECT id, name, cost, unlocked FROM skins")
         return c.fetchall()
+
 
 def unlock_skin(skin_name):
     with get_connection() as conn:
@@ -124,11 +136,13 @@ def unlock_skin(skin_name):
         c.execute("UPDATE skins SET unlocked=1 WHERE name=?", (skin_name,))
         conn.commit()
 
+
 def get_selected_skin():
     with get_connection() as conn:
         c = conn.cursor()
         c.execute("SELECT selected_skin FROM player_skin")
         return c.fetchone()[0]
+
 
 def select_skin(skin_name):
     with get_connection() as conn:
@@ -136,12 +150,14 @@ def select_skin(skin_name):
         c.execute("UPDATE player_skin SET selected_skin=?", (skin_name,))
         conn.commit()
 
+
 def get_level_time(level_id):
     with get_connection() as conn:
         c = conn.cursor()
         c.execute("SELECT best_time FROM levels WHERE id=?", (level_id,))
         result = c.fetchone()
         return result[0] if result else None
+
 
 def update_level_time(level_id, time_seconds):
     with get_connection() as conn:

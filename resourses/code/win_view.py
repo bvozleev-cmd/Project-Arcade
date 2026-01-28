@@ -1,8 +1,8 @@
 import arcade
 import arcade.gui
-import sounds
-from level_select import LevelSelectView
-from menu import MenuView
+from resourses.code import sounds
+from resourses.code.level_select import LevelSelectView
+
 
 
 class WinView(arcade.View):
@@ -54,6 +54,7 @@ class WinView(arcade.View):
         next_btn.on_click = lambda e: self.window.show_view(LevelSelectView())
         box.add(next_btn)
         menu_btn = arcade.gui.UIFlatButton(text="Главное меню", width=220)
+        from resourses.code.menu import MenuView
         menu_btn.on_click = lambda e: self.window.show_view(MenuView(win=1))
         box.add(menu_btn)
         anchor = arcade.gui.UIAnchorLayout()

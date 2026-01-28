@@ -1,7 +1,7 @@
 import arcade
 import arcade.gui
-from database import get_levels
-import sounds
+from resourses.code.database import get_levels
+from resourses.code import sounds
 
 
 class LevelSelectView(arcade.View):
@@ -13,7 +13,7 @@ class LevelSelectView(arcade.View):
         sounds.press_button_1.play()
         box = arcade.gui.UIBoxLayout(space_between=15)
 
-        from database import get_level_time
+        from resourses.code.database import get_level_time
 
         for level_id, completed, crystals in get_levels():
             status = "✅" if completed else "❌"
@@ -49,11 +49,11 @@ class LevelSelectView(arcade.View):
         if self.back_view:
             self.window.show_view(self.back_view)
         else:
-            from menu import MenuView
+            from resourses.code.menu import MenuView
             self.window.show_view(MenuView())
 
     def start(self, level_id):
-        from game import MyGame
+        from resourses.code.game import MyGame
         self.window.show_view(MyGame(level_id, level_select_view=self))
 
     def on_draw(self):

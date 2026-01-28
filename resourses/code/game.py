@@ -3,8 +3,15 @@ import enum
 import os
 import random
 import math
-import sounds
 import time
+
+from resourses.code import sounds
+from resourses.code import sounds
+from resourses.code.database import get_selected_skin
+from resourses.code.death_view import DeathView
+
+BASE_DIR = os.path.dirname(os.path.dirname(__file__))
+ASSETS = os.path.join(BASE_DIR, "assets")
 
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 600
@@ -24,7 +31,7 @@ class FaceDirection(enum.Enum):
 
 class Player(arcade.Sprite):
     def __init__(self):
-        from database import get_selected_skin
+        from resourses.code.database import get_selected_skin
         super().__init__(hit_box_algorithm="Simple")
         self.scale = PLAYER_SCALE
         selected_skin = get_selected_skin()
@@ -33,7 +40,9 @@ class Player(arcade.Sprite):
         elif selected_skin == 'character_5':
             self.scale = 0.17
         try:
-            self.idle_texture = arcade.load_texture(f"images/characters/{selected_skin}.png")
+            self.idle_texture = arcade.load_texture(
+                os.path.join(ASSETS, "images", "characters", f"{selected_skin}.png")
+            )
         except:
             self.idle_texture = arcade.make_circle_texture(30, arcade.color.RED)
         self.texture = self.idle_texture
@@ -65,7 +74,7 @@ class Particle(arcade.Sprite):
         self.fade_rate = 5
         self.scale = 1.0
 
-    def update(self, delta_time: float = 1/60):
+    def update(self, delta_time: float = 1 / 60):
         self.center_x += self.change_x
         self.center_y += self.change_y
         new_alpha = self.alpha - self.fade_rate
@@ -103,7 +112,7 @@ class MyGame(arcade.View):
         import time
         self.level_start_time = time.time()
         self.items_collected = 0
-        map_name = f"maps/map_{self.level}.tmx"
+        map_name = os.path.join(ASSETS, "maps", f"map_{self.level}.tmx")
         if not os.path.exists(map_name):
             print(f"Warning: Map {map_name} not found, defaulting to maps/map_2.tmx")
             map_name = "maps/map_2.tmx"
@@ -150,7 +159,7 @@ class MyGame(arcade.View):
         self.clear()
         if self.camera:
             self.camera.use()
-        
+
         self.scene.draw()
         self.particles.draw()
 
@@ -194,7 +203,6 @@ class MyGame(arcade.View):
             self.player.change_x = PLAYER_MOVEMENT_SPEED
         else:
             self.player.change_x = 0
-
         if self.god_mode:
             if self.up_pressed and not self.down_pressed:
                 self.player.change_y = PLAYER_MOVEMENT_SPEED
@@ -202,14 +210,14 @@ class MyGame(arcade.View):
                 self.player.change_y = -PLAYER_MOVEMENT_SPEED
             else:
                 self.player.change_y = 0
-            
+
             self.player.center_x += self.player.change_x
             self.player.center_y += self.player.change_y
         else:
             if self.physics_engine:
                 self.physics_engine.update()
             if self.player.center_y < -300:
-                from death_view import DeathView
+                from resourses.code.death_view import DeathView
                 self.window.show_view(DeathView(self.level))
 
         if self.player:
@@ -227,58 +235,41 @@ class MyGame(arcade.View):
             item.remove_from_sprite_lists()
             self.items_collected += 1
             sounds.cristall.play()
-            
-            # Simple particle effect
-            # Use cached texture
             for _ in range(10):
                 angle = random.uniform(0, 360)
                 speed = random.uniform(3, 8)
                 dx = math.cos(math.radians(angle)) * speed
                 dy = math.sin(math.radians(angle)) * speed
-                
                 particle = Particle(item.center_x, item.center_y, dx, dy, self.particle_texture)
                 self.particles.append(particle)
-
-        # Update particles
         self.particles.update()
-
-        # Check for door collision (victory)
         if "Door" in self.scene:
             if arcade.check_for_collision_with_list(self.player, self.scene["Door"]):
-                from database import complete_level, get_level_crystals
-                from win_view import WinView
-
+                from resourses.code.database import (
+                    complete_level,
+                    get_level_crystals,
+                    get_level_time,
+                    update_level_time
+                )
+                from resourses.code.win_view import WinView
                 old_record = get_level_crystals(self.level)
                 new_record = self.items_collected > old_record
-
-                from database import complete_level, get_level_crystals, update_level_time
-                from win_view import WinView
-
                 old_record = get_level_crystals(self.level)
                 new_record_crystals = self.items_collected > old_record
                 complete_level(self.level, self.items_collected)
-
-                # --- время ---
-                from database import get_level_time
-                old_time = get_level_time(self.level)  # нужно сделать функцию
+                old_time = get_level_time(self.level)
                 new_time = self.level_elapsed_time
                 new_record_time = False
-
                 if old_time is None or new_time < old_time:
                     update_level_time(self.level, new_time)
                     new_record_time = True
-
+                from resourses.code.win_view import WinView
                 self.window.show_view(
                     WinView(self.level, self.items_collected, new_record_crystals, new_record_time, new_time)
                 )
 
                 complete_level(self.level, self.items_collected)
-
-
-        # Update particles
         self.particles.update()
-
-        # Проверка столкновений с Water/Lava
         if "Water/Lava" in self.scene:
             if arcade.check_for_collision_with_list(self.player, self.scene["Water/Lava"]):
                 if not getattr(self, "water_lava_sound_played", False):
@@ -301,10 +292,10 @@ class MyGame(arcade.View):
         elif key in (arcade.key.DOWN, arcade.key.S):
             if self.god_mode:
                 self.down_pressed = True
-        elif key == arcade.key.G:
+        elif key == arcade.key.G and modifiers & arcade.key.MOD_ALT:
             self.god_mode = not self.god_mode
         elif key == arcade.key.ESCAPE:
-            from pause_view import PauseView
+            from resourses.code.pause_view import PauseView
             self.window.show_view(PauseView(self))
 
     def on_key_release(self, key, modifiers):

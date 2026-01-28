@@ -1,15 +1,15 @@
 import arcade
 import arcade.gui
 
-import sounds
-from database import (
+from resourses.code import sounds
+from resourses.code.database import (
     get_skins,
     get_selected_skin,
     unlock_skin,
     select_skin,
     get_level_crystals
 )
-from menu import MenuView
+from resourses.code.menu import MenuView
 
 
 class ShopView(arcade.View):

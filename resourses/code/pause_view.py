@@ -1,7 +1,6 @@
 import arcade
 import arcade.gui
-import sounds
-from menu import MenuView
+from resourses.code import sounds
 
 
 class PauseView(arcade.View):
@@ -49,10 +48,11 @@ class PauseView(arcade.View):
             self.game_view.level_select_view.back_view = self
             self.window.show_view(self.game_view.level_select_view)
         else:
-            from level_select import LevelSelectView
+            from resourses.code.level_select import LevelSelectView
             self.window.show_view(LevelSelectView(back_view=self))
 
     def on_click_menu(self, event):
+        from resourses.code.menu import MenuView
         sounds.press_button_1.play()
         self.window.show_view(MenuView())
 
