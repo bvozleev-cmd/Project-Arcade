@@ -1,0 +1,96 @@
+classDiagram
+    direction LR
+
+    %% --- Стилизация (Цвета и рамки) ---
+    classDef mainNode fill:#fff,stroke:#000,stroke-width:4px;
+    classDef subNode fill:#fff,stroke:#333,stroke-width:2px;
+    classDef moduleNode fill:#e1f5fe,stroke:#01579b,stroke-width:2px;
+
+    %% --- Базовый класс ---
+    class View["<span style='font-size:20px; font-weight:bold'>View</span>"] {
+        <<arcade.View>>
+        +on_draw()
+        +on_update()
+    }
+
+    %% --- Наследники ---
+    class MenuView["<span style='font-size:16px; font-weight:bold'>MenuView</span>"] {
+        +on_show_view()
+        +start_game()
+    }
+    
+    class LevelSelectView["<span style='font-size:16px; font-weight:bold'>LevelSelectView</span>"] {
+        +level_buttons
+        +on_mouse_press()
+    }
+
+    class ShopView["<span style='font-size:16px; font-weight:bold'>ShopView</span>"] {
+        +skin_buttons
+        +setup_ui()
+    }
+
+    class MyGame["<span style='font-size:20px; font-weight:bold'>MyGame</span>"] {
+        -Player player
+        -PhysicsEngine physics
+        +setup()
+        +on_key_press()
+    }
+
+    class PauseView["<span style='font-size:16px; font-weight:bold'>PauseView</span>"] {
+        +return_to_game()
+    }
+
+    class WinView["<span style='font-size:16px; font-weight:bold'>WinView</span>"] {
+        +score
+        +restart()
+    }
+
+    class DeathView["<span style='font-size:16px; font-weight:bold'>DeathView</span>"] {
+        +restart_level()
+    }
+
+    %% --- Другие классы ---
+    class Player["<span style='font-size:16px; font-weight:bold'>Player</span>"] {
+        +texture
+        +scale
+        +update_animation()
+    }
+
+    class Database["<span style='font-size:16px; font-weight:bold'>Database</span>"] {
+        <<Module>>
+        +get_levels()
+        +get_skins()
+        +update_record()
+    }
+
+    %% --- Применение стилей ---
+    class View:::mainNode
+    class MyGame:::mainNode
+    class Player:::subNode
+    class Database:::moduleNode
+    class MenuView:::subNode
+    class LevelSelectView:::subNode
+    class ShopView:::subNode
+    class PauseView:::subNode
+    class WinView:::subNode
+    class DeathView:::subNode
+
+    %% --- Наследование ---
+    View <|-- MenuView
+    View <|-- LevelSelectView
+    View <|-- ShopView
+    View <|-- MyGame
+    View <|-- PauseView
+    View <|-- WinView
+    View <|-- DeathView
+
+    %% --- Связи ---
+    MyGame *-- Player
+    MenuView ..> LevelSelectView
+    LevelSelectView ..> MyGame
+    MyGame ..> PauseView
+    MyGame ..> WinView
+    MyGame ..> DeathView
+    ShopView ..> Database
+    MyGame ..> Database
+    WinView ..> Database
