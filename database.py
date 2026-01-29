@@ -95,15 +95,20 @@ def init_skins():
             unlocked INTEGER DEFAULT 0
         )
         """)
-        skins = [
+        
+        # Список актуальных скинов
+        actual_skins = [
             (1, "character_1", 0),
             (2, "character_2", 10),
             (3, "character_3", 20),
-            (4, "character_4", 30),
-            (5, "character_5", 40),
         ]
-        for s in skins:
+        
+        # Удаляем старые скины, которых нет в новом списке (4 и 5)
+        c.execute("DELETE FROM skins WHERE id > 3")
+        
+        for s in actual_skins:
             c.execute("INSERT OR IGNORE INTO skins (id, name, cost) VALUES (?, ?, ?)", s)
+            
         c.execute("""
         CREATE TABLE IF NOT EXISTS player_skin (
             selected_skin TEXT
