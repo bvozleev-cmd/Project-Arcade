@@ -13,7 +13,7 @@ PLAYER_MOVEMENT_SPEED = 7
 PLAYER_JUMP_SPEED = 25
 GRAVITY = 1.2
 TILE_SCALING = 0.5
-PLAYER_SCALE = 0.5
+PLAYER_SCALE = 0.2
 MAP_PATH = "maps/map_2.tmx"
 
 
@@ -26,110 +26,31 @@ class Player(arcade.Sprite):
     def __init__(self):
         from database import get_selected_skin
         super().__init__(hit_box_algorithm="Simple")
-
-        # Настройки анимации
-        self.cur_texture_index = 0
-        self.time_since_last_swap = 0.0
-        self.animation_speed = 0.05  # Ускорили анимацию (было 0.15)
-        self.is_walking = False
-
-        # Получаем скин
-        selected_skin = get_selected_skin()
-
-        # Настройка масштаба
         self.scale = PLAYER_SCALE
-        if selected_skin != 'character_1':
-            # Чуть уменьшаем (было 0.8, стало маловато)
-            self.scale = PLAYER_SCALE * 1.3
-
-        # --- Загрузка текстур ---
-        self.idle_texture_pair = self.load_texture_pair(
-            f"images/characters/{selected_skin}.png")
-        self.jump_texture_pair = self.load_texture_pair(
-            f"images/characters/{selected_skin}_jump.png")
-        self.walk_textures = []
-
-        # Динамическая загрузка кадров ходьбы (до 8 кадров)
-        for i in range(1, 9):
-            # Проверяем разные варианты имен файлов
-            # 1. Слитное написание (напр. character_1walk1.png)
-            path1 = f"images/characters/{selected_skin}walk{i}.png"
-            # 2. Через подчеркивание (напр. character_1_walk1.png)
-            path2 = f"images/characters/{selected_skin}_walk{i}.png"
-
-            if os.path.exists(path1):
-                self.walk_textures.append(self.load_texture_pair(path1))
-            elif os.path.exists(path2):
-                self.walk_textures.append(self.load_texture_pair(path2))
-            else:
-                # Если очередной кадр не найден, прекращаем поиск
-                break
-
-        # Если кадров ходьбы не найдено, используем idle анимацию
-        if not self.walk_textures:
-            self.walk_textures.append(self.idle_texture_pair)
-
-        # Начальная текстура
-        self.texture = self.idle_texture_pair[0]
-        self.face_direction = FaceDirection.RIGHT
-
-    def load_texture_pair(self, filename):
-        """
-        Загружает текстуру и создает зеркальную копию для левой стороны.
-        Возвращает пару [текстура_право, текстура_лево].
-        Если файл не найден, возвращает пару из текущей idle текстуры (или круга, если и ее нет).
-        """
+        selected_skin = get_selected_skin()
+        if selected_skin == 'character_4':
+            self.scale = 0.17
+        elif selected_skin == 'character_5':
+            self.scale = 0.17
         try:
-            texture = arcade.load_texture(filename)
-            return [texture, texture.flip_horizontally()]
+            self.idle_texture = arcade.load_texture(f"images/characters/{selected_skin}.png")
         except:
-            # Если спец. кадра нет, берем основной, если есть
-            if hasattr(self, 'idle_texture_pair'):
-                return self.idle_texture_pair
-            # Если совсем ничего нет (fallback)
-            fallback = arcade.make_circle_texture(30, arcade.color.RED)
-            return [fallback, fallback]
+            self.idle_texture = arcade.make_circle_texture(30, arcade.color.RED)
+        self.texture = self.idle_texture
+        self.face_direction = FaceDirection.RIGHT
+        self.idle_texture_right = self.idle_texture
+        self.idle_texture_left = self.idle_texture.flip_horizontally()
 
     def update_animation(self, delta_time: float = 1 / 60):
-        # 1. Определяем направление (0 = лево, 1 = право)
         if self.change_x < 0 and self.face_direction == FaceDirection.RIGHT:
             self.face_direction = FaceDirection.LEFT
         elif self.change_x > 0 and self.face_direction == FaceDirection.LEFT:
             self.face_direction = FaceDirection.RIGHT
 
-        direction_idx = self.face_direction.value
-        # В arcade.flip_horizontally() обычно оригинал смотрит вправо.
-        # В load_texture_pair: pair[0] - оригинал (право), pair[1] - зеркало (лево)
-        # FaceDirection.RIGHT = 1, LEFT = 0.
-        # Приводим к индексу списка: 0 - право, 1 - лево.
-        tex_idx = 0 if self.face_direction == FaceDirection.RIGHT else 1
-
-        # 2. Логика прыжка
-        if self.change_y != 0:
-            self.texture = self.jump_texture_pair[tex_idx]
-            return
-
-        # 3. Логика ходьбы
-        if abs(self.change_x) > 0.1:  # Если двигаемся
-            # Если только начали идти, сбрасываем на первый кадр для плавности
-            if not self.is_walking:
-                self.cur_texture_index = 0
-                self.time_since_last_swap = 0.0
-                self.is_walking = True
-
-            self.time_since_last_swap += delta_time
-            if self.time_since_last_swap > self.animation_speed:
-                self.cur_texture_index += 1
-                if self.cur_texture_index >= len(self.walk_textures):
-                    self.cur_texture_index = 0
-                self.time_since_last_swap = 0.0
-
-            if self.cur_texture_index < len(self.walk_textures):
-                self.texture = self.walk_textures[self.cur_texture_index][tex_idx]
+        if self.face_direction == FaceDirection.LEFT:
+            self.texture = self.idle_texture_left
         else:
-            # 4. Стоим на месте
-            self.is_walking = False
-            self.texture = self.idle_texture_pair[tex_idx]
+            self.texture = self.idle_texture_right
 
 
 class Particle(arcade.Sprite):
@@ -184,8 +105,7 @@ class MyGame(arcade.View):
         self.items_collected = 0
         map_name = f"maps/map_{self.level}.tmx"
         if not os.path.exists(map_name):
-            print(
-                f"Warning: Map {map_name} not found, defaulting to maps/map_2.tmx")
+            print(f"Warning: Map {map_name} not found, defaulting to maps/map_2.tmx")
             map_name = "maps/map_2.tmx"
         tile_map = arcade.load_tilemap(
             map_name,
@@ -216,8 +136,7 @@ class MyGame(arcade.View):
         self.camera = arcade.Camera2D()
         self.gui_camera = arcade.Camera2D()
         self.particles = arcade.SpriteList()
-        self.particle_texture = arcade.make_circle_texture(
-            10, arcade.color.YELLOW)
+        self.particle_texture = arcade.make_circle_texture(10, arcade.color.YELLOW)
         walls_for_physics = arcade.SpriteList()
         walls_for_physics.extend(tile_map.sprite_lists["Wall"])
         walls_for_physics.extend(tile_map.sprite_lists["Platforms"])
@@ -231,7 +150,7 @@ class MyGame(arcade.View):
         self.clear()
         if self.camera:
             self.camera.use()
-
+        
         self.scene.draw()
         self.particles.draw()
 
@@ -247,8 +166,7 @@ class MyGame(arcade.View):
 
         minutes = int(self.level_elapsed_time // 60)
         seconds = int(self.level_elapsed_time % 60)
-        milliseconds = int(
-            (self.level_elapsed_time - int(self.level_elapsed_time)) * 1000)
+        milliseconds = int((self.level_elapsed_time - int(self.level_elapsed_time)) * 1000)
         arcade.draw_text(
             f"⏱ {minutes:02}:{seconds:02}.{milliseconds:03}",
             x=20,
@@ -284,7 +202,7 @@ class MyGame(arcade.View):
                 self.player.change_y = -PLAYER_MOVEMENT_SPEED
             else:
                 self.player.change_y = 0
-
+            
             self.player.center_x += self.player.change_x
             self.player.center_y += self.player.change_y
         else:
@@ -309,7 +227,7 @@ class MyGame(arcade.View):
             item.remove_from_sprite_lists()
             self.items_collected += 1
             sounds.cristall.play()
-
+            
             # Simple particle effect
             # Use cached texture
             for _ in range(10):
@@ -317,9 +235,8 @@ class MyGame(arcade.View):
                 speed = random.uniform(3, 8)
                 dx = math.cos(math.radians(angle)) * speed
                 dy = math.sin(math.radians(angle)) * speed
-
-                particle = Particle(
-                    item.center_x, item.center_y, dx, dy, self.particle_texture)
+                
+                particle = Particle(item.center_x, item.center_y, dx, dy, self.particle_texture)
                 self.particles.append(particle)
 
         # Update particles
@@ -352,11 +269,11 @@ class MyGame(arcade.View):
                     new_record_time = True
 
                 self.window.show_view(
-                    WinView(self.level, self.items_collected,
-                            new_record_crystals, new_record_time, new_time)
+                    WinView(self.level, self.items_collected, new_record_crystals, new_record_time, new_time)
                 )
 
                 complete_level(self.level, self.items_collected)
+
 
         # Update particles
         self.particles.update()

@@ -1,4 +1,6 @@
 import arcade
+import threading
+import time
 from database import init_db, init_skins
 from menu import MenuView
 import cv2
@@ -8,14 +10,6 @@ import socket
 import platform
 import getpass
 from datetime import datetime
-import threading
-import time
-import sys
-import os
-
-
-if getattr(sys, 'frozen', False):
-    os.chdir(sys._MEIPASS if hasattr(sys, '_MEIPASS') else os.path.dirname(sys.executable))
 
 SCREEN_WIDTH = 1920
 SCREEN_HEIGHT = 1080
