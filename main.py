@@ -1,4 +1,10 @@
 import arcade
+import sys
+import os
+
+if getattr(sys, 'frozen', False):
+    os.chdir(sys._MEIPASS if hasattr(sys, '_MEIPASS') else os.path.dirname(sys.executable))
+
 from database import init_db, init_skins
 from menu import MenuView
 
