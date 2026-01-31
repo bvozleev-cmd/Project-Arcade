@@ -6,7 +6,7 @@ import math
 import sounds
 import time
 
-SCREEN_WIDTH = 800
+SCREEN_WIDTH = 801
 SCREEN_HEIGHT = 600
 SCREEN_TITLE = "Coin Quest"
 PLAYER_MOVEMENT_SPEED = 7
