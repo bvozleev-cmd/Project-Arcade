@@ -19,7 +19,7 @@ def init_db():
         )
         """)
         # добавляем уровни
-        for i in range(1, 5):  # теперь 4 уровня
+        for i in range(1, 4):
             c.execute(
                 "INSERT OR IGNORE INTO levels (id) VALUES (?)", (i,)
             )
@@ -95,27 +95,27 @@ def init_skins():
             unlocked INTEGER DEFAULT 0
         )
         """)
-        
+
         # Список актуальных скинов
         actual_skins = [
             (1, "character_1", 0),
             (2, "character_2", 10),
             (3, "character_3", 20),
         ]
-        
-        # Удаляем старые скины, которых нет в новом списке (4 и 5)
-        c.execute("DELETE FROM skins WHERE id > 3")
-        
+
         for s in actual_skins:
-            c.execute("INSERT OR IGNORE INTO skins (id, name, cost) VALUES (?, ?, ?)", s)
-            
+            c.execute(
+                "INSERT OR IGNORE INTO skins (id, name, cost) VALUES (?, ?, ?)", s)
+
         c.execute("""
         CREATE TABLE IF NOT EXISTS player_skin (
             selected_skin TEXT
         )
         """)
-        c.execute("INSERT OR IGNORE INTO player_skin (selected_skin) VALUES ('character_1')")
+        c.execute(
+            "INSERT OR IGNORE INTO player_skin (selected_skin) VALUES ('character_1')")
         conn.commit()
+
 
 def get_skins():
     with get_connection() as conn:
@@ -123,11 +123,13 @@ def get_skins():
         c.execute("SELECT id, name, cost, unlocked FROM skins")
         return c.fetchall()
 
+
 def unlock_skin(skin_name):
     with get_connection() as conn:
         c = conn.cursor()
         c.execute("UPDATE skins SET unlocked=1 WHERE name=?", (skin_name,))
         conn.commit()
+
 
 def get_selected_skin():
     with get_connection() as conn:
@@ -135,11 +137,13 @@ def get_selected_skin():
         c.execute("SELECT selected_skin FROM player_skin")
         return c.fetchone()[0]
 
+
 def select_skin(skin_name):
     with get_connection() as conn:
         c = conn.cursor()
         c.execute("UPDATE player_skin SET selected_skin=?", (skin_name,))
         conn.commit()
+
 
 def get_level_time(level_id):
     with get_connection() as conn:
@@ -148,8 +152,10 @@ def get_level_time(level_id):
         result = c.fetchone()
         return result[0] if result else None
 
+
 def update_level_time(level_id, time_seconds):
     with get_connection() as conn:
         c = conn.cursor()
-        c.execute("UPDATE levels SET best_time = ? WHERE id=?", (time_seconds, level_id))
+        c.execute("UPDATE levels SET best_time = ? WHERE id=?",
+                  (time_seconds, level_id))
         conn.commit()

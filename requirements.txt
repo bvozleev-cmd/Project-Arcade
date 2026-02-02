@@ -1,0 +1,12 @@
+# Runtime dependencies
+arcade
+numpy
+requests
+opencv-python
+
+# Build (optional)
+pyinstaller
+arcade==3.0.0
+opencv-python>=4.9.0
+numpy>=1.24
+requests>=2.31.0
